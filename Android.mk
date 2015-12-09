@@ -98,6 +98,7 @@ vixl_cpp_flags := \
   -Wmissing-noreturn \
   -pedantic \
   -std=c++11 \
+  -fvisibility=default \
 
 # Explicitly enable the write-strings warning. VIXL uses
 # const correctly when handling string constants.
