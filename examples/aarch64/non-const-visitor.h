@@ -71,10 +71,14 @@ class SwitchAddSubRegisterSources : public DecoderVisitor {
   V(ConditionalBranch)                  \
   V(System)                             \
   V(Exception)                          \
+  V(RotateRightIntoFlags)               \
+  V(EvaluateIntoFlags)                  \
+  V(LoadStorePAC)                       \
   V(LoadStorePairPostIndex)             \
   V(LoadStorePairOffset)                \
   V(LoadStorePairPreIndex)              \
   V(LoadStorePairNonTemporal)           \
+  V(LoadStoreRCpcUnscaledOffset)        \
   V(LoadLiteral)                        \
   V(LoadStoreUnscaledOffset)            \
   V(LoadStorePostIndex)                 \
@@ -132,6 +136,7 @@ class SwitchAddSubRegisterSources : public DecoderVisitor {
   V(NEONShiftImmediate)                 \
   V(NEONTable)                          \
   V(NEONPerm)                           \
+  V(Reserved)                           \
   V(Unallocated)                        \
   V(Unimplemented)
 #define DEFINE_UNUSED_VISITOR(Name)                                  \

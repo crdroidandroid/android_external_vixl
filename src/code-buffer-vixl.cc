@@ -33,12 +33,6 @@ extern "C" {
 
 namespace vixl {
 
-// BSD uses `MAP_ANON` instead of the Linux `MAP_ANONYMOUS`. The `MAP_ANONYMOUS`
-// alias should generally be available, but is not always, so define it manually
-// if necessary.
-#if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
-#define MAP_ANONYMOUS MAP_ANON
-#endif
 
 CodeBuffer::CodeBuffer(size_t capacity)
     : buffer_(NULL),
@@ -80,7 +74,7 @@ CodeBuffer::CodeBuffer(byte* buffer, size_t capacity)
 }
 
 
-CodeBuffer::~CodeBuffer() {
+CodeBuffer::~CodeBuffer() VIXL_NEGATIVE_TESTING_ALLOW_EXCEPTION {
   VIXL_ASSERT(!IsDirty());
   if (managed_) {
 #ifdef VIXL_CODE_BUFFER_MALLOC
@@ -94,20 +88,28 @@ CodeBuffer::~CodeBuffer() {
 }
 
 
-#ifdef VIXL_CODE_BUFFER_MMAP
 void CodeBuffer::SetExecutable() {
+#ifdef VIXL_CODE_BUFFER_MMAP
   int ret = mprotect(buffer_, capacity_, PROT_READ | PROT_EXEC);
   VIXL_CHECK(ret == 0);
-}
+#else
+  // This requires page-aligned memory blocks, which we can only guarantee with
+  // mmap.
+  VIXL_UNIMPLEMENTED();
 #endif
+}
 
 
-#ifdef VIXL_CODE_BUFFER_MMAP
 void CodeBuffer::SetWritable() {
+#ifdef VIXL_CODE_BUFFER_MMAP
   int ret = mprotect(buffer_, capacity_, PROT_READ | PROT_WRITE);
   VIXL_CHECK(ret == 0);
-}
+#else
+  // This requires page-aligned memory blocks, which we can only guarantee with
+  // mmap.
+  VIXL_UNIMPLEMENTED();
 #endif
+}
 
 
 void CodeBuffer::EmitString(const char* string) {
@@ -169,16 +171,9 @@ void CodeBuffer::Grow(size_t new_capacity) {
   buffer_ = static_cast<byte*>(realloc(buffer_, new_capacity));
   VIXL_CHECK(buffer_ != NULL);
 #elif defined(VIXL_CODE_BUFFER_MMAP)
-#ifdef __APPLE__
-  // TODO: Avoid using VIXL_CODE_BUFFER_MMAP.
-  // Don't use false to avoid having the compiler realize it's a noreturn
-  // method.
-  VIXL_ASSERT(!managed_);
-#else
   buffer_ = static_cast<byte*>(
       mremap(buffer_, capacity_, new_capacity, MREMAP_MAYMOVE));
   VIXL_CHECK(buffer_ != MAP_FAILED);
-#endif
 #else
 #error Unknown code buffer allocator.
 #endif
